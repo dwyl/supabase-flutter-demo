@@ -122,8 +122,67 @@ running on an emulator.
 
 ![base-demo](https://user-images.githubusercontent.com/17494745/215099485-71a51357-856b-4cce-989e-7cd6832c2f6b.gif)
 
-
 It's a simple Todo app, 
 where you can toggle between the various states
 and see all, active and completed items.
+
+## 1. `Supabase` setup
+
+Before we start building an authentication flow,
+we need to setup an account on `Supabase`.
+Sign in `Supabase` in the next link -> 
+https://app.supabase.com/sign-in?returnTo=%2Fproject%2F_%2Fsql
+
+<img width="798" alt="sign-in" src="https://user-images.githubusercontent.com/17494745/215134801-68458462-5b87-4a04-a6ca-55520460365f.png">
+
+Choose your preferred provider.
+In this case, 
+we are going to be logging in using *Github*.
+
+After successfully creating your account,
+you should be prompted with a dashboard
+that allows you to **create a new project**.
+
+<img width="686" alt="new_project" src="https://user-images.githubusercontent.com/17494745/215134792-5e6e4b4a-038d-44ad-939d-39b718728fb3.png">
+
+We are going to be creating a project
+for this tutorial.
+Click on the `+ New Project` button.
+
+You will be redirected to this page.
+
+<img width="1036" alt="new_project" src="https://user-images.githubusercontent.com/17494745/215134790-57af6bb4-04e3-408e-8313-0628b31ad0b6.png">
+
+In this tutorial,
+we are going to create a project called 
+`flutter-todo`.
+
+The region closest to us is `Central EU`. 
+You can choose the region that is closest to you,
+which should yield less latency whilst making API calls.
+
+Choose the `Free` pricing plan,
+choose a password for database access
+and you should be sorted!
+
+After clicking on `Create new project`,
+you will be redirected to the project dashboard.
+
+<img width="1254" alt="project_dashboard_loading" src="https://user-images.githubusercontent.com/17494745/215134784-e2245e5a-9b1f-4f6a-a167-b7dfa302d45d.png">
+
+Notice that there's a pill
+stating `"setting up project"`.
+This means the database and API endpoints
+are being configured. 
+
+If you wait a few minutes, 
+you will see your dashboard change to
+something similar to the next image.
+
+<img width="1340" alt="project_dashboard_done" src="https://user-images.githubusercontent.com/17494745/215134772-9fd64b31-4058-4c14-a53e-d8089e1467eb.png">
+
+Awesome! 🎉
+
+Now we can start implementing authentication
+and *add it* to our Flutter application!
 
