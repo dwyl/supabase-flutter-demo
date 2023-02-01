@@ -264,3 +264,17 @@ tables, API and keys created,
 we may now start integrating `Supabase` 
 in our `Flutter` app!
 
+### 4.1 Adding `Supabase`-specific dependencies
+
+Let's start with the dependencies
+we need *that are related to `Supabase`.
+
+In `pubspec.yaml`, 
+add [`supabase_flutter`](https://pub.dev/packages/supabase_flutter)
+to the dependencies section
+and run `flutter pub get`.
+
+
+
+
+
