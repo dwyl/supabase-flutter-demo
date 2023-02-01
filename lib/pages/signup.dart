@@ -1,10 +1,8 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:todo_app/constants.dart';
-import 'package:todo_app/pages/login.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -14,7 +12,6 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
-  bool _isLoading = false;
   bool _redirecting = false;
   late final StreamSubscription<AuthState> _authStateSubscription;
 
@@ -80,6 +77,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     if (value!.isEmpty || !value.contains('@')) {
                       return 'Email is not valid';
                     }
+                    return null;
                   },
                 ),
               ),
@@ -94,6 +92,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     if (value!.isEmpty) {
                       return 'Invalid password';
                     }
+                    return null;
                   },
                 ),
               ),

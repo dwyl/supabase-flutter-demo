@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:todo_app/constants.dart';
@@ -14,7 +13,6 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  bool _isLoading = false;
   bool _redirecting = false;
   late final StreamSubscription<AuthState> _authStateSubscription;
 
@@ -80,6 +78,7 @@ class _LoginPageState extends State<LoginPage> {
                     if (value!.isEmpty || !value.contains('@')) {
                       return 'Email is not valid';
                     }
+                    return null;
                   },
                 ),
               ),
@@ -94,6 +93,7 @@ class _LoginPageState extends State<LoginPage> {
                     if (value!.isEmpty) {
                       return 'Invalid password';
                     }
+                    return null;
                   },
                 ),
               ),

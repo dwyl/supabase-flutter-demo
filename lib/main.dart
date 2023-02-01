@@ -7,7 +7,6 @@ import 'package:todo_app/pages/login.dart';
 import 'package:todo_app/pages/splash.dart';
 
 import 'providers.dart';
-import 'todo.dart';
 
 /// Keys for components for testing
 final bottomNavigationBarKey = UniqueKey();
@@ -59,13 +58,12 @@ class Home extends HookConsumerWidget {
               onPressed: () async {
                   try {
                     await supabase.auth.signOut();
+                    Navigator.of(context).pushReplacementNamed('/');
                   } on AuthException catch (error) {
                     context.showErrorSnackBar(message: error.message);
                   } catch (error) {
                     context.showErrorSnackBar(message: 'Unexpected error occurred');
                   }
-                  
-                  Navigator.of(context).pushReplacementNamed('/');
                 
               },
             ),

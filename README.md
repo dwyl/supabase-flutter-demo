@@ -264,7 +264,7 @@ tables, API and keys created,
 we may now start integrating `Supabase` 
 in our `Flutter` app!
 
-### 4.1 Adding `Supabase`-specific dependencies
+### 4.1 Adding `Supabase`-specific dependencies and configurations
 
 Let's start with the dependencies
 we need *that are related to `Supabase`.
@@ -274,7 +274,711 @@ add [`supabase_flutter`](https://pub.dev/packages/supabase_flutter)
 to the dependencies section
 and run `flutter pub get`.
 
+With this package, we will be able 
+to authenticate through `Supabase` 
+in a much easier manner.
 
+If we were to implement authentication,
+people using the app will only be able to complete it
+with e-mail confirmation.
 
+In order to simplify this tutorial,
+we will *disable e-mail confirmation*,
+so only an e-mail and password are needed
+to showcase the authentication flow
+*in and out* of the app.
+
+To do this,
+go to your project's dashboard
+and click on `Authentication`.
+
+<img width="1140" alt="auth" src="https://user-images.githubusercontent.com/17494745/216115534-c35fa017-9a0e-43ae-bb54-8a850ae42dd4.png">
+
+Click on `Providers` 
+and open the `E-mail` blade.
+Disable the `Confirm e-mail` switch.
+
+<img width="1241" alt="provider" src="https://user-images.githubusercontent.com/17494745/216115753-8e07808b-e7b0-4432-a99d-924724218a72.png">
+
+And that's it!
+
+### 4.2 Adding main function and constants
+
+Let's start coding! 🧑‍💻
+
+Let's initialize the `Supabase` client
+inside our `main` function 
+with the **API credentials**
+that we visited prior.
+
+Copy `url` and `anon` keys 
+and change the `main` function 
+inside `main.dart` like so.
+
+```dart
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: 'YOUR_SUPABASE_URL',
+    anonKey: 'YOUR_SUPABASE_ANON_KEY',
+  );
+  runApp(const ProviderScope(child: App()));
+}
+```
+
+Lets create a file with constants
+to make it easier to use the `Supabase` client.
+We will also add an 
+[`extension method declaration`](https://dart.dev/guides/language/extension-methods)
+to show a
+[snackbar](https://m2.material.io/components/snackbars)
+if any authentication error occurs.
+
+These variables will be exposed on the app, 
+and that's completely fine since we have 
+*Row Level Security* enabled on our database
+by default.
+
+Create a file called `lib/constants.dart`
+and add the following code.
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+final supabase = Supabase.instance.client;
+
+extension ShowSnackBar on BuildContext {
+  void showSnackBar({
+    required String message,
+    Color backgroundColor = Colors.white,
+  }) {
+    ScaffoldMessenger.of(this).showSnackBar(SnackBar(
+      content: Text(message),
+      backgroundColor: backgroundColor,
+    ));
+  }
+
+  void showErrorSnackBar({required String message}) {
+    showSnackBar(message: message, backgroundColor: Colors.red);
+  }
+}
+```
+
+We will use the `supabase` constant
+and these snackbar utilities
+during the authentication process
+in the `Login` and `Sign-Up` screens.
+
+### 4.3 Adding `Splash` Screen
+
+Let's add a splash screen
+that will be shown to users right after they open the app.
+It will show a loading state
+*and retrieve the current session*.
+
+If the user already has an ongoing session,
+it will redirect the user accordingly.
+
+Create a new directory in `lib/pages`,
+and create `splash.dart` inside it.
+Use the following code.
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:todo_app/constants.dart';
+
+class SplashPage extends StatefulWidget {
+  const SplashPage({super.key});
+
+  @override
+  _SplashPageState createState() => _SplashPageState();
+}
+
+class _SplashPageState extends State<SplashPage> {
+  bool _redirectCalled = false;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _redirect();
+  }
+
+  Future<void> _redirect() async {
+    await Future.delayed(Duration.zero);
+    if (_redirectCalled || !mounted) {
+      return;
+    }
+
+    _redirectCalled = true;
+    final session = supabase.auth.currentSession;
+    if (session != null) {
+      Navigator.of(context).pushReplacementNamed('/home');
+    } else {
+      Navigator.of(context).pushReplacementNamed('/login');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
+    );
+  }
+}
+```
+
+In here, we are creating a 
+*stateful widget*
+that shows a `CircularProgressIndicator`
+while the app is loading.
+
+The `_redirect` function is called
+every time a dependency is changed,
+including when the widget is mounted.
+Inside this function,
+we check if there is any current session.
+
+If there's one, 
+the user is redirected to `/home`.
+If not, it's redirected to `/login`.
+
+> We've yet to implement these routes.
+> Don't worry, we will in the future.
+
+### 4.3 Creating a `Sign-Up` and `Login` Screen
+
+Let's now create a `Sign-Up` screen.
+In this screen, 
+the person using the app will input
+an e-mail and password.
+
+If both are valid,
+a profile is created 
+and the user is redirected to the app.
+
+Inside `lib/pages`,
+create a file called `signup.dart`
+and paste the following snippet of code.
+
+```dart
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:todo_app/constants.dart';
+
+class SignUpPage extends StatefulWidget {
+  const SignUpPage({super.key});
+
+  @override
+  _SignUpPageState createState() => _SignUpPageState();
+}
+
+class _SignUpPageState extends State<SignUpPage> {
+  bool _redirecting = false;
+  late final StreamSubscription<AuthState> _authStateSubscription;
+
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    _authStateSubscription = supabase.auth.onAuthStateChange.listen((data) {
+      if (_redirecting) return;
+      final session = data.session;
+      if (session != null) {
+        _redirecting = true;
+        Navigator.of(context).pushReplacementNamed('/home');
+      }
+    });
+    super.initState();
+  }
+
+  Future<void> _signUp() async {
+    try {
+      await supabase.auth.signUp(password: _passwordController.text, email: _emailController.text);
+      if (mounted) {
+        _emailController.clear();
+        _passwordController.clear();
+
+        _redirecting = true;
+        Navigator.of(context).pushReplacementNamed('/home');
+      }
+    } on AuthException catch (error) {
+      context.showErrorSnackBar(message: error.message);
+    } catch (error) {
+      context.showErrorSnackBar(message: 'Unexpected error occurred');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Sign Up')),
+      body: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: <Widget>[
+              const SizedBox(
+                height: 200,
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 15),
+                child: TextFormField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(border: OutlineInputBorder(), labelText: 'Email', hintText: 'Enter a valid email'),
+                  validator: (String? value) {
+                    if (value!.isEmpty || !value.contains('@')) {
+                      return 'Email is not valid';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 15.0, right: 15.0, top: 15, bottom: 0),
+                //padding: EdgeInsets.symmetric(horizontal: 15),
+                child: TextFormField(
+                  obscureText: true,
+                  controller: _passwordController,
+                  decoration: const InputDecoration(border: OutlineInputBorder(), labelText: 'Password', hintText: 'Enter secure password'),
+                  validator: (String? value) {
+                    if (value!.isEmpty) {
+                      return 'Invalid password';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              Container(
+                height: 50,
+                width: 250,
+                decoration: BoxDecoration(color: Colors.blue, borderRadius: BorderRadius.circular(20)),
+                child: TextButton(
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      _signUp();
+                    }
+                  },
+                  child: const Text(
+                    'Sign Up',
+                    style: TextStyle(color: Colors.white, fontSize: 25),
+                  ),
+                ),
+              ),
+              const SizedBox(
+                height: 130,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+```
+
+Let's break this widget down.
+
+We are adding three basic elements:
+- two `TextFormFields` 
+and associated controllers (`_emailController`
+and `_passwordController`) - 
+these controllers will manage the state
+inside these form fields.
+- a `TextButton`, that, when pressed,
+triggers the `_signUp()` function which,
+in turn,
+tries to sign up the user.
+
+The `_signUp()` function
+uses the `supabase` constant
+we created in `constants.dart`
+and tries to create the user.
+
+```dart
+  Future<void> _signUp() async {
+    try {
+      await supabase.auth.signUp(password: _passwordController.text, email: _emailController.text);
+      if (mounted) {
+        _emailController.clear();
+        _passwordController.clear();
+
+        _redirecting = true;
+        Navigator.of(context).pushReplacementNamed('/home');
+      }
+    } on AuthException catch (error) {
+      context.showErrorSnackBar(message: error.message);
+    } catch (error) {
+      context.showErrorSnackBar(message: 'Unexpected error occurred');
+    }
+  }
+```
+
+If an error occurs whe signing up,
+a snackbar is shown to the user 
+detailing what went wrong.
+
+If it's successful,
+the user is redirected to `/home`,
+which is the main app itself.
+
+Let's create the `Login` page now!
+Inside the same directory `lib/pages`,
+create `login.dart`.
+Use the following code.
+
+```dart
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:todo_app/constants.dart';
+import 'package:todo_app/pages/signup.dart';
+
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  bool _redirecting = false;
+  late final StreamSubscription<AuthState> _authStateSubscription;
+
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    _authStateSubscription = supabase.auth.onAuthStateChange.listen((data) {
+      if (_redirecting) return;
+      final session = data.session;
+      if (session != null) {
+        _redirecting = true;
+        Navigator.of(context).pushReplacementNamed('/home');
+      }
+    });
+    super.initState();
+  }
+
+  Future<void> _signIn() async {
+    try {
+      await supabase.auth.signInWithPassword(email: _emailController.text, password: _passwordController.text);
+      if (mounted) {
+        _emailController.clear();
+        _passwordController.clear();
+
+        _redirecting = true;
+        Navigator.of(context).pushReplacementNamed('/home');
+      }
+    } on AuthException catch (error) {
+      context.showErrorSnackBar(message: error.message);
+    } catch (error) {
+      context.showErrorSnackBar(message: 'Unexpected error occurred');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Login')),
+      body: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: <Widget>[
+              const SizedBox(
+                height: 200,
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 15),
+                child: TextFormField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(border: OutlineInputBorder(), labelText: 'Email', hintText: 'Enter a valid email'),
+                  validator: (String? value) {
+                    if (value!.isEmpty || !value.contains('@')) {
+                      return 'Email is not valid';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 15.0, right: 15.0, top: 15, bottom: 0),
+                //padding: EdgeInsets.symmetric(horizontal: 15),
+                child: TextFormField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(border: OutlineInputBorder(), labelText: 'Password', hintText: 'Enter secure password'),
+                  validator: (String? value) {
+                    if (value!.isEmpty) {
+                      return 'Invalid password';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: Container(
+                  height: 50,
+                  width: 250,
+                  decoration: BoxDecoration(color: Colors.blue, borderRadius: BorderRadius.circular(20)),
+                  child: TextButton(
+                    onPressed: () async {
+                      if (_formKey.currentState!.validate()) {
+                        _signIn();
+                      }
+                    },
+                    child: const Text(
+                      'Login',
+                      style: TextStyle(color: Colors.white, fontSize: 25),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(
+                height: 130,
+              ),
+              TextButton(
+                  onPressed: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const SignUpPage()));
+                  },
+                  child: const Text('New User? Create Account')),
+              const SizedBox(
+                height: 30,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+```
+
+The `Login` page implementation
+shares many similarities to `SignUp`'s.
+There are a few differences, though.
+
+We added a `TextButton` that,
+when pressed,
+redirects the user to the `Sign Up` page,
+in case he/she doesn't have an account.
+
+Additionally, inside 
+[`initState()`](https://api.flutter.dev/flutter/widgets/State/initState.html),
+which is executed when the widget is instantiated,
+we check if there's any session change.
+If there's one,
+it is checked and, if valid,
+the user is redirected to `/home`.
+
+In both of these pages,
+the `supabase` variable is used.
+This constant uses the `supabase_flutter`
+package we've installed which,
+with the API keys of our project,
+communicates with the API
+and creates the user when signing up
+and manages the user session.
+
+You can check the users created
+in https://app.supabase.com/project/_/auth/users.
+Choose the project 
+and you will see the table of users. 
+
+> This page is inside the `Authentication > Users` button
+> in the project's sidebar.
+
+<img width="1201" alt="users" src="https://user-images.githubusercontent.com/17494745/216122696-75e2294c-5853-4775-8c13-4a44aea87cd8.png">
+
+### 4.4 Changing `main.dart`
+
+Now that we have created the necessary pages,
+let's *use them* whe the app starts up.
+
+Inside `lib/main.dart`,
+let's make a small change.
+Locate the line:
+
+```dart
+final _currentTodo = Provider<Todo>((ref) => throw UnimplementedError());
+```
+
+and *move it* to `providers.dart`,
+while changing it to `currentTodo`
+(from `_currentTodo`, which makes a variable private).
+
+Now change all the instances
+of this variable from `_currentTodo`
+to `currentTodo`
+inside `main.dart`.
+
+//CHANGEHERE
+e.g
+`lib/providers.dart`
+
+This change is needed to avoid any 
+[`depend_on_referenced_packages`](https://dart-lang.github.io/linter/lints/depend_on_referenced_packages.html)
+problems along the line.
+
+Let's keep going.
+Locate the `App` class
+and change it to the following.
+
+```dart
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:todo_app/constants.dart';
+import 'package:todo_app/pages/login.dart';
+import 'package:todo_app/pages/splash.dart';
+
+class App extends StatelessWidget {
+  const App({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(initialRoute: '/', routes: <String, WidgetBuilder>{
+      '/': (_) => const SplashPage(),
+      '/login': (_) => const LoginPage(),
+      '/home': (_) => const Home(),
+    });
+  }
+}
+```
+
+We've added the **routes**
+we mentioned earlier.
+
+The last change we need to do
+is to add a **`Logout`** button,
+so the user can logout of the app
+and be redirected back to the 
+`Login` page.
+
+Inside the `Home` class,
+locate the `build` method
+and change the `appBar`
+attribute inside the `Scaffold`.
+
+```dart
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final todos = ref.watch(filteredTodos);
+    final newTodoController = useTextEditingController();
+
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Home'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout),
+              tooltip: 'logout',
+              onPressed: () async {
+                  try {
+                    await supabase.auth.signOut();
+                    Navigator.of(context).pushReplacementNamed('/');
+                  } on AuthException catch (error) {
+                    context.showErrorSnackBar(message: error.message);
+                  } catch (error) {
+                    context.showErrorSnackBar(message: 'Unexpected error occurred');
+                  }
+                  
+                
+              },
+            ),
+          ],
+        ),
+        body: 
+        ...
+```
+
+We've added an `IconButton` that,
+when pressed,
+uses the `supabase` variable
+to try and sign the user out.
+If it's *not successful*,
+a snackbar pops up, 
+detailing the error occurred.
+
+## 5. Run the app!
+
+That's all you need to do!
+Let's check our app running!
+
+You should see something 
+similar to the gif below.
+
+![final](https://user-images.githubusercontent.com/17494745/216128674-1351474e-a00f-4f4b-b33f-bef784be95d1.gif)
+
+As you can see, 
+the user signs up,
+is instantly redirected to the app.
+You can logout and login again.
+
+When logging in,
+if the user is not found
+or any field is invalid,
+a snackbar is shown 
+on the bottom of the screen.
+
+And that's it! 
+Congratulations! 👏
+
+You've just added authentication
+to your Flutter app that is *secure*,
+meaning no user can tamper with other profiles
+or try to impersonate anyone
+during the auth process
+(thanks to Row-Level Security).
+
+## 6. Other features
+
+This tutorial is *intentionally simple*,
+as it's meant to showcase the authentication process
+of `Supabase`.
+
+Each profile is stored in the database.
+You might have noticed that,
+when creating the `profiles` table in the database,
+users can also have an `avatar_url`.
+
+`Supabase` allows you to store images
+related to users.
+`Supabase` does this through `AWS`,
+using [`S3` buckets](https://aws.amazon.com/s3/).
+
+You may find more information
+on how to integrate this
+in https://supabase.com/docs/guides/getting-started/tutorials/with-flutter#bonus-profile-photos.
 
 
