@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:todo_app/constants.dart';
+import 'package:todo_app/pages/login.dart';
+import 'package:todo_app/pages/splash.dart';
 
 import 'providers.dart';
 import 'todo.dart';
@@ -10,7 +14,14 @@ final bottomNavigationBarKey = UniqueKey();
 final addTodoKey = UniqueKey();
 
 // coverage:ignore-start
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: 'https://ymllubptojxyyheqhfbg.supabase.co',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InltbGx1YnB0b2p4eXloZXFoZmJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NzQ4MzU2ODksImV4cCI6MTk5MDQxMTY4OX0.DwTBckKPG63bObcqK2il-xt0uiWQXfuAxWS596RTUfk',
+  );
   runApp(const ProviderScope(child: App()));
 }
 // coverage:ignore-end
@@ -20,9 +31,11 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Home(),
-    );
+    return MaterialApp(initialRoute: '/', routes: <String, WidgetBuilder>{
+      '/': (_) => const SplashPage(),
+      '/login': (_) => const LoginPage(),
+      '/home': (_) => const Home(),
+    });
   }
 }
 
@@ -37,6 +50,27 @@ class Home extends HookConsumerWidget {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Home'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout),
+              tooltip: 'logout',
+              onPressed: () async {
+                  try {
+                    await supabase.auth.signOut();
+                  } on AuthException catch (error) {
+                    context.showErrorSnackBar(message: error.message);
+                  } catch (error) {
+                    context.showErrorSnackBar(message: 'Unexpected error occurred');
+                  }
+                  
+                  Navigator.of(context).pushReplacementNamed('/');
+                
+              },
+            ),
+          ],
+        ),
         body: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
           children: [
@@ -51,28 +85,20 @@ class Home extends HookConsumerWidget {
                 newTodoController.clear();
               },
             ),
-
             const SizedBox(height: 42),
-            
             Padding(
               padding: const EdgeInsets.only(bottom: 16.0),
-              child: Text(
-                '${ref.watch(uncompletedTodosCount)} items left',
-                style: const TextStyle(fontSize: 20)
-                ),
+              child: Text('${ref.watch(uncompletedTodosCount)} items left', style: const TextStyle(fontSize: 20)),
             ),
-
             if (todos.isNotEmpty) const Divider(height: 0),
             for (var i = 0; i < todos.length; i++) ...[
-
               if (i > 0) const Divider(height: 0),
               ProviderScope(
-                  overrides: [
-                    _currentTodo.overrideWithValue(todos[i]),
-                  ],
-                  child: const TodoItem(),
+                overrides: [
+                  currentTodo.overrideWithValue(todos[i]),
+                ],
+                child: const TodoItem(),
               ),
-
             ],
           ],
         ),
@@ -110,11 +136,7 @@ class Menu extends HookConsumerWidget {
         if (value == 2) ref.read(todoListFilter.notifier).state = TodoListFilter.completed;
       },
       items: const <BottomNavigationBarItem>[
-        BottomNavigationBarItem(
-          icon: Icon(Icons.list),
-          label: 'All',
-          tooltip: 'All'
-        ),
+        BottomNavigationBarItem(icon: Icon(Icons.list), label: 'All', tooltip: 'All'),
         BottomNavigationBarItem(
           icon: Icon(Icons.circle),
           label: 'Active',
@@ -132,22 +154,12 @@ class Menu extends HookConsumerWidget {
   }
 }
 
-
-/// A provider which exposes the [Todo] displayed by a [TodoItem].
-///
-/// By retrieving the [Todo] through a provider instead of through its
-/// constructor, this allows [TodoItem] to be instantiated using the `const` keyword.
-///
-/// This encapuslation ensures that when adding/removing/editing todos, 
-/// only what the impacted widgets rebuilds, instead of the entire list of items.
-final _currentTodo = Provider<Todo>((ref) => throw UnimplementedError());
-
 class TodoItem extends HookConsumerWidget {
   const TodoItem({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final todo = ref.watch(_currentTodo);
+    final todo = ref.watch(currentTodo);
     final itemFocusNode = useFocusNode();
     final itemIsFocused = useIsFocused(itemFocusNode);
 
