@@ -49,7 +49,7 @@ with `Flutter` to create an authentication flow.
 
 This `Demo` builds upon the foundational work done
 in our **`Flutter` Todo List Tutorial**:
-[dwyl/**lutter-todo-list-tutorial**](https://github.com/dwyl/flutter-todo-list-tutorial)
+[dwyl/**flutter-todo-list-tutorial**](https://github.com/dwyl/flutter-todo-list-tutorial)
 it is 
 [_assumed knowledge_](https://en.wikipedia.org/wiki/Curse_of_knowledge). 
 
@@ -88,7 +88,7 @@ so it helps everyone! 🙏
 ## 0. Borrow Baseline Code
 
 Let's start by cloning the code from
-`dwyl/lutter-todo-list-tutorial`.
+`dwyl/flutter-todo-list-tutorial`.
 Access the link
 and download the project files.
 
@@ -185,4 +185,82 @@ Awesome! 🎉
 
 Now we can start implementing authentication
 and *add it* to our Flutter application!
+
+## 2. Creating table in `Supabase`
+
+Let's start implementing this feature
+by adding a database in our `Supabase` project.
+We are going to be saving the user information
+in a database table.
+
+For this, click on the `SQL Editor` button
+on the left side of your project.
+
+<img width="1168" alt="project" src="https://user-images.githubusercontent.com/17494745/216006858-32bef198-d08d-4775-a6c8-05bb2338c436.png">
+
+If you scroll down,
+you will find a button saying `User Management Starter`.
+In here, you will have a *template*
+to create a table for the user profiles.
+
+<img width="1436" alt="user_starter" src="https://user-images.githubusercontent.com/17494745/216007177-1540c952-c752-4e96-9ae9-f61d1ec46d28.png">
+
+You may change the `profiles` table to your heart's content.
+This setup is a scaffold that will
+execute a few setup steps for you.
+
+It will add [**Row-level security**](https://supabase.com/docs/guides/auth/row-level-security),
+meaning each user are only allowed to query
+*their own information*.
+
+
+<img width="1149" alt="table_creation" src="https://user-images.githubusercontent.com/17494745/216007783-185ccf31-fb5b-44b6-acb7-846d79bd2f0b.png">
+
+For now, just click `Run` on the lower part of the screen.
+Your terminal will yield a result
+stating `"Success. No rows returned."`.
+
+<img width="850" alt="run" src="https://user-images.githubusercontent.com/17494745/216009012-92102bad-7533-45d5-ad68-b78dc87af11f.png">
+
+Awesome! 🎉
+
+You've just created the table to store
+your app's user information!
+
+## 3. Getting the `API` keys
+
+Now that we have created our database table,
+we need to know how to *make operations on it*.
+For this, we can use the 
+**API that was generated on start-up**.
+
+Our Flutter app will call this API
+during the authentication process.
+
+For this, we need to get the `url` 
+and the `anon` key from the API settings.
+
+For this, go to `Project Settings` in your side bar.
+
+<img width="686" alt="settings" src="https://user-images.githubusercontent.com/17494745/216010688-b9c5db42-3972-4614-9729-4b4be9b79b6a.png">
+
+And click on `API`.
+
+<img width="884" alt="api_button" src="https://user-images.githubusercontent.com/17494745/216010921-7a14e6d7-a4d5-442b-af88-bf919c4bcbe3.png">
+
+After this, you should be able 
+to see the necessary keys/information
+to make requests to the API.
+You will find the API `url`, 
+`anon` and `service_role` keys 
+in this page.
+
+<img width="1208" alt="keys" src="https://user-images.githubusercontent.com/17494745/216012231-8cba626d-e46d-43c5-95f3-fad69d9963de.png">
+
+## 4. Integrating with the app
+
+Now that we have all the necessary
+tables, API and keys created,
+we may now start integrating `Supabase` 
+in our `Flutter` app!
 
