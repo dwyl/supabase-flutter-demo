@@ -267,7 +267,7 @@ in our `Flutter` app!
 ### 4.1 Adding `Supabase`-specific dependencies and configurations
 
 Let's start with the dependencies
-we need *that are related to `Supabase`.
+we need *that are related to `Supabase`*.
 
 In `pubspec.yaml`, 
 add [`supabase_flutter`](https://pub.dev/packages/supabase_flutter)
@@ -278,8 +278,12 @@ With this package, we will be able
 to authenticate through `Supabase` 
 in a much easier manner.
 
-If we were to implement authentication,
-people using the app will only be able to complete it
+By default, 
+if we were to implement authentication
+with `Supabase`,
+people using the app would 
+only be able to complete the auth
+process
 with e-mail confirmation.
 
 In order to simplify this tutorial,
@@ -842,9 +846,8 @@ of this variable from `_currentTodo`
 to `currentTodo`
 inside `main.dart`.
 
-//CHANGEHERE
 e.g
-`lib/providers.dart`
+[`lib/providers.dart`](https://github.com/dwyl/supabase-flutter-demo/blob/d42513c3489dac55ddd1e914e2988c5db4b2860a/lib/providers.dart#L64)
 
 This change is needed to avoid any 
 [`depend_on_referenced_packages`](https://dart-lang.github.io/linter/lints/depend_on_referenced_packages.html)
@@ -938,7 +941,7 @@ Let's check our app running!
 You should see something 
 similar to the gif below.
 
-![final](https://user-images.githubusercontent.com/17494745/216128674-1351474e-a00f-4f4b-b33f-bef784be95d1.gif)
+![final](https://user-images.githubusercontent.com/17494745/216282220-f7a62adb-bb7e-4db4-b1eb-99dcc7cf6412.gif)
 
 As you can see, 
 the user signs up,
