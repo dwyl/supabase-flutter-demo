@@ -8,12 +8,11 @@ class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
 
   @override
-  _SignUpPageState createState() => _SignUpPageState();
+  SignUpPageState createState() => SignUpPageState();
 }
 
-class _SignUpPageState extends State<SignUpPage> {
+class SignUpPageState extends State<SignUpPage> {
   bool _redirecting = false;
-  late final StreamSubscription<AuthState> _authStateSubscription;
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -28,7 +27,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   void initState() {
-    _authStateSubscription = supabase.auth.onAuthStateChange.listen((data) {
+    supabase.auth.onAuthStateChange.listen((data) {
       if (_redirecting) return;
       final session = data.session;
       if (session != null) {

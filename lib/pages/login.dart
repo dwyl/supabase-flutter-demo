@@ -9,12 +9,11 @@ class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
-  _LoginPageState createState() => _LoginPageState();
+  LoginPageState createState() => LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class LoginPageState extends State<LoginPage> {
   bool _redirecting = false;
-  late final StreamSubscription<AuthState> _authStateSubscription;
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -29,7 +28,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void initState() {
-    _authStateSubscription = supabase.auth.onAuthStateChange.listen((data) {
+    supabase.auth.onAuthStateChange.listen((data) {
       if (_redirecting) return;
       final session = data.session;
       if (session != null) {

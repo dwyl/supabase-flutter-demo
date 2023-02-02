@@ -8,7 +8,6 @@ in a simple `Flutter` Todo List App
 with authentication
 
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/dwyl/supabase-flutter-demo/ci.yml?label=build&style=flat-square&branch=main)
-[![codecov.io](https://img.shields.io/codecov/c/github/dwyl/supabase-flutter-demo/master.svg?style=flat-square)](http://codecov.io/github/dwyl/supabase-flutter-demo?branch=master)
 [![HitCount](https://hits.dwyl.com/dwyl/supabase-flutter-demo.svg?style=flat-square&show=unique)](http://hits.dwyl.com/dwyl/supabase-flutter-demo)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat-square)](https://github.com/dwyl/supabase-flutter-demo/issues)
 
@@ -399,11 +398,12 @@ class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
   @override
-  _SplashPageState createState() => _SplashPageState();
+  SplashPageState createState() => SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage> {
+class SplashPageState extends State<SplashPage> {
   bool _redirectCalled = false;
+  
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -617,6 +617,46 @@ we created in `constants.dart`
 and tries to create the user.
 
 ```dart
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:todo_app/constants.dart';
+
+class SignUpPage extends StatefulWidget {
+  const SignUpPage({super.key});
+
+  @override
+  SignUpPageState createState() => SignUpPageState();
+}
+
+class SignUpPageState extends State<SignUpPage> {
+  bool _redirecting = false;
+
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    supabase.auth.onAuthStateChange.listen((data) {
+      if (_redirecting) return;
+      final session = data.session;
+      if (session != null) {
+        _redirecting = true;
+        Navigator.of(context).pushReplacementNamed('/home');
+      }
+    });
+    super.initState();
+  }
+
   Future<void> _signUp() async {
     try {
       await supabase.auth.signUp(password: _passwordController.text, email: _emailController.text);
@@ -633,6 +673,76 @@ and tries to create the user.
       context.showErrorSnackBar(message: 'Unexpected error occurred');
     }
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Sign Up')),
+      body: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: <Widget>[
+              const SizedBox(
+                height: 200,
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 15),
+                child: TextFormField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(border: OutlineInputBorder(), labelText: 'Email', hintText: 'Enter a valid email'),
+                  validator: (String? value) {
+                    if (value!.isEmpty || !value.contains('@')) {
+                      return 'Email is not valid';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 15.0, right: 15.0, top: 15, bottom: 0),
+                //padding: EdgeInsets.symmetric(horizontal: 15),
+                child: TextFormField(
+                  obscureText: true,
+                  controller: _passwordController,
+                  decoration: const InputDecoration(border: OutlineInputBorder(), labelText: 'Password', hintText: 'Enter secure password'),
+                  validator: (String? value) {
+                    if (value!.isEmpty) {
+                      return 'Invalid password';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              Container(
+                height: 50,
+                width: 250,
+                decoration: BoxDecoration(color: Colors.blue, borderRadius: BorderRadius.circular(20)),
+                child: TextButton(
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      _signUp();
+                    }
+                  },
+                  child: const Text(
+                    'Sign Up',
+                    style: TextStyle(color: Colors.white, fontSize: 25),
+                  ),
+                ),
+              ),
+              const SizedBox(
+                height: 130,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 ```
 
 If an error occurs whe signing up,
@@ -660,12 +770,11 @@ class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
-  _LoginPageState createState() => _LoginPageState();
+  LoginPageState createState() => LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class LoginPageState extends State<LoginPage> {
   bool _redirecting = false;
-  late final StreamSubscription<AuthState> _authStateSubscription;
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -680,7 +789,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void initState() {
-    _authStateSubscription = supabase.auth.onAuthStateChange.listen((data) {
+    supabase.auth.onAuthStateChange.listen((data) {
       if (_redirecting) return;
       final session = data.session;
       if (session != null) {
@@ -785,7 +894,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
-
 ```
 
 The `Login` page implementation
@@ -907,16 +1015,16 @@ attribute inside the `Scaffold`.
               icon: const Icon(Icons.logout),
               tooltip: 'logout',
               onPressed: () async {
-                  try {
-                    await supabase.auth.signOut();
-                    Navigator.of(context).pushReplacementNamed('/');
-                  } on AuthException catch (error) {
-                    context.showErrorSnackBar(message: error.message);
-                  } catch (error) {
-                    context.showErrorSnackBar(message: 'Unexpected error occurred');
-                  }
-                  
-                
+                final navigator = Navigator.of(context);
+
+                try {
+                  await supabase.auth.signOut();
+                  navigator.pushReplacementNamed('/');
+                } on AuthException catch (error) {
+                  context.showErrorSnackBar(message: error.message);
+                } catch (error) {
+                  context.showErrorSnackBar(message: 'Unexpected error occurred');
+                }
               },
             ),
           ],

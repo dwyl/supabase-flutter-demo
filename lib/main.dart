@@ -56,15 +56,16 @@ class Home extends HookConsumerWidget {
               icon: const Icon(Icons.logout),
               tooltip: 'logout',
               onPressed: () async {
-                  try {
-                    await supabase.auth.signOut();
-                    Navigator.of(context).pushReplacementNamed('/');
-                  } on AuthException catch (error) {
-                    context.showErrorSnackBar(message: error.message);
-                  } catch (error) {
-                    context.showErrorSnackBar(message: 'Unexpected error occurred');
-                  }
-                
+                final navigator = Navigator.of(context);
+
+                try {
+                  await supabase.auth.signOut();
+                  navigator.pushReplacementNamed('/');
+                } on AuthException catch (error) {
+                  context.showErrorSnackBar(message: error.message);
+                } catch (error) {
+                  context.showErrorSnackBar(message: 'Unexpected error occurred');
+                }
               },
             ),
           ],
