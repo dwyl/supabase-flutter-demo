@@ -6,8 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:todo_app/main.dart';
-import 'package:todo_app/pages/login.dart';
-import 'package:todo_app/pages/signup.dart';
 
 import './widget_test.mocks.dart';
 
@@ -41,7 +39,7 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsNothing);
     });
 
-    testWidgets('Shows splash and redirects to login, since there\s no session', (WidgetTester tester) async {
+    testWidgets('Shows splash and redirects to login, since there\'s no session', (WidgetTester tester) async {
       // Mocking supabase variable with session
       MockSupabaseClient mockSupabase = MockSupabaseClient();
       MockGoTrueClient mockTrueClient = MockGoTrueClient();

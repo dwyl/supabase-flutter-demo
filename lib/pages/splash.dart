@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:todo_app/constants.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key, required this.supabase});
