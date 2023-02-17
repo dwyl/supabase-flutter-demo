@@ -17,9 +17,13 @@ void main() {
       const Session mockSession =
           Session(accessToken: "some_token", tokenType: "some_type", user: User(appMetadata: {}, aud: '', createdAt: '', id: '', userMetadata: {}));
 
+      // To mock the `supabase` variable in the nested elements,
+      // we need to create mocks for each nested method stub and do so
+      // "in-to-out"...
       MockSupabaseClient mockSupabase = MockSupabaseClient();
       MockGoTrueClient mockTrueClient = MockGoTrueClient();
 
+      // ... hence why we start with `currentSession` and work from there.
       when(mockTrueClient.currentSession).thenReturn(mockSession);
       when(mockSupabase.auth).thenReturn(mockTrueClient);
 
