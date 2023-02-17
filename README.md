@@ -113,8 +113,22 @@ and you should see the terminal
 stating all tests pass.
 
 ```sh
-00:04 +4: All tests passed!
+00:04 +2: All tests passed!  
 ```
+
+> **Note**
+> Testing the app was beyond the scope of this quick demo.
+> However, we've *kickstarted it*
+> (you can check some tests inside the `test` folder).
+>
+> We've passed the `supabase` variable
+> needed to complete the authentication by 
+> dependency injection 
+> and *have successfully mocked it*.
+> We just didn't have the time to add more tests to give
+> the app more test coverage.
+>
+> You can help this by creating a PR if you want to! 😊
 
 The base application should look like so,
 running on an emulator.
