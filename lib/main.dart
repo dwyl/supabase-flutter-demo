@@ -21,25 +21,29 @@ Future<void> main() async {
     anonKey:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InltbGx1YnB0b2p4eXloZXFoZmJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NzQ4MzU2ODksImV4cCI6MTk5MDQxMTY4OX0.DwTBckKPG63bObcqK2il-xt0uiWQXfuAxWS596RTUfk',
   );
-  runApp(const ProviderScope(child: App()));
+
+  final supabase = Supabase.instance.client;
+  runApp(ProviderScope(child: App(supabase: supabase)));
 }
 // coverage:ignore-end
 
 class App extends StatelessWidget {
-  const App({Key? key}) : super(key: key);
+  const App({Key? key, required this.supabase}) : super(key: key);
+  final SupabaseClient supabase;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(initialRoute: '/', routes: <String, WidgetBuilder>{
-      '/': (_) => const SplashPage(),
-      '/login': (_) => const LoginPage(),
-      '/home': (_) => const Home(),
+      '/': (_) => SplashPage(supabase: supabase),
+      '/login': (_) => LoginPage(supabase: supabase),
+      '/home': (_) => Home(supabase: supabase),
     });
   }
 }
 
 class Home extends HookConsumerWidget {
-  const Home({Key? key}) : super(key: key);
+  const Home({Key? key, required this.supabase}) : super(key: key);
+  final SupabaseClient supabase;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:todo_app/constants.dart';
 
 class SplashPage extends StatefulWidget {
-  const SplashPage({super.key});
+  const SplashPage({super.key, required this.supabase});
+  final SupabaseClient supabase;
 
   @override
   SplashPageState createState() => SplashPageState();
@@ -24,7 +26,7 @@ class SplashPageState extends State<SplashPage> {
     }
 
     _redirectCalled = true;
-    final session = supabase.auth.currentSession;
+    final session = widget.supabase.auth.currentSession;
     if (session != null) {
       Navigator.of(context).pushReplacementNamed('/home');
     } else {

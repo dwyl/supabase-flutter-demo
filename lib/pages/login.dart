@@ -6,7 +6,8 @@ import 'package:todo_app/constants.dart';
 import 'package:todo_app/pages/signup.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  const LoginPage({super.key, required this.supabase});
+  final SupabaseClient supabase;
 
   @override
   LoginPageState createState() => LoginPageState();
@@ -28,7 +29,7 @@ class LoginPageState extends State<LoginPage> {
 
   @override
   void initState() {
-    supabase.auth.onAuthStateChange.listen((data) {
+    widget.supabase.auth.onAuthStateChange.listen((data) {
       if (_redirecting) return;
       final session = data.session;
       if (session != null) {
@@ -41,7 +42,7 @@ class LoginPageState extends State<LoginPage> {
 
   Future<void> _signIn() async {
     try {
-      await supabase.auth.signInWithPassword(email: _emailController.text, password: _passwordController.text);
+      await widget.supabase.auth.signInWithPassword(email: _emailController.text, password: _passwordController.text);
       if (mounted) {
         _emailController.clear();
         _passwordController.clear();
@@ -120,7 +121,7 @@ class LoginPageState extends State<LoginPage> {
               ),
               TextButton(
                   onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const SignUpPage()));
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => SignUpPage(supabase: widget.supabase)));
                   },
                   child: const Text('New User? Create Account')),
               const SizedBox(

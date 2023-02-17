@@ -5,7 +5,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:todo_app/constants.dart';
 
 class SignUpPage extends StatefulWidget {
-  const SignUpPage({super.key});
+  const SignUpPage({super.key, required this.supabase});
+  final SupabaseClient supabase;
+
 
   @override
   SignUpPageState createState() => SignUpPageState();
@@ -27,7 +29,7 @@ class SignUpPageState extends State<SignUpPage> {
 
   @override
   void initState() {
-    supabase.auth.onAuthStateChange.listen((data) {
+    widget.supabase.auth.onAuthStateChange.listen((data) {
       if (_redirecting) return;
       final session = data.session;
       if (session != null) {
@@ -40,7 +42,7 @@ class SignUpPageState extends State<SignUpPage> {
 
   Future<void> _signUp() async {
     try {
-      await supabase.auth.signUp(password: _passwordController.text, email: _emailController.text);
+      await widget.supabase.auth.signUp(password: _passwordController.text, email: _emailController.text);
       if (mounted) {
         _emailController.clear();
         _passwordController.clear();
