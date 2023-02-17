@@ -7,7 +7,7 @@ with `Flutter`
 in a simple `Flutter` Todo List App 
 with authentication
 
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/dwyl/supabase-flutter-demo/ci.yml?label=build&style=flat-square&branch=main)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/dwyl/supabase-flutter-demo/ci.yml?label=build&style=flat-square)
 [![HitCount](https://hits.dwyl.com/dwyl/supabase-flutter-demo.svg?style=flat-square&show=unique)](http://hits.dwyl.com/dwyl/supabase-flutter-demo)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat-square)](https://github.com/dwyl/supabase-flutter-demo/issues)
 
