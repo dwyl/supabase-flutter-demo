@@ -14,7 +14,8 @@ import './widget_test.mocks.dart';
 void main() {
     testWidgets('Shows splash and redirects to home, since we have session', (WidgetTester tester) async {
       // Mocking supabase variable with session
-      var mockSession = Session(accessToken: "some_token", tokenType: "some_type", user: User(appMetadata: {}, aud: '', createdAt: '', id: '', userMetadata: {}));
+      // ignore: const_with_non_const
+      var mockSession = const Session(accessToken: "some_token", tokenType: "some_type", user: User(appMetadata: {}, aud: '', createdAt: '', id: '', userMetadata: {}));
 
       // To mock the `supabase` variable in the nested elements,
       // we need to create mocks for each nested method stub and do so
